@@ -3,7 +3,20 @@ const {Builder, By, Key, until} = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const chromedriver = require('chromedriver');
+const mysql = require('mysql');
 const { argv } = require('process');
+const { connect } = require('http2');
+
+const connection = mysql.createConnection({
+    host:'localhost',
+    user:'root',
+    password:'',
+    database:'nodejs_project'
+})
+connection.connect((error)=>{
+    if(!!error) console.log('Error');
+    else console.log('Connected')
+})
 chrome.setDefaultService(new chrome.ServiceBuilder(chromedriver.path).build());
 var IsInData = (data)=>{
     //-----------------------------
@@ -326,7 +339,9 @@ async function cc(){
                 let midi3 = await midi2[1].getAttribute('href')
                 MIDILinks.push(midi3);
             }
-            fs.writeFileSync('all.json',Data); //Temizlik
+            fs.writeFileSync('all.json','',(err)=>{
+                if(err) console.log(err);
+            }); //Temizlik
             for(let i=0;i<Artist.length;i++){
                 let Features = {
                     Artist:Artist[i],
@@ -336,7 +351,15 @@ async function cc(){
                     MIDILinks:MIDILinks[i]
                 }
                 let Data = JSON.stringify(Features);
-                fs.appendFile('all.json',Data);
+                fs.appendFileSync('all.json',Data,function(err){
+                    if(err) console.log(err);
+                });
+                let sql = 'INSERT INTO enstruman SET ?';
+                connection.query(sql,Features,(err,result)=>{
+                    if(err) throw err;
+                    console.log(result);
+                })
+                
             }
         }
     }catch(error){
