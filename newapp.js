@@ -7,20 +7,25 @@ yargs.command({
     }
 })
 yargs.command({
+    command:'cc',
+    handler(argv){
+        yonlendir.cc();
+    }
+})
+yargs.command({
     command:'piano',
     describe:'Piano hakkında tüm bilgileri getirir.',
     builder:{
         style:{
             describe:'List piano sheet music styles',
             default:''
+            //DemandOption:true
         }
     },
     handler(argv){
-        if(argv.style=="")
-            yonlendir.piano();
-        else 
-            if(yonlendir.IsInData(argv.style))
-                yonlendir.piano(argv.style)
+        if(yonlendir.IsInData(argv.style))
+            yonlendir.piano(argv.style)
+        //diğerleri buna benzeyecek
     }
 })
 yargs.command({
@@ -35,9 +40,10 @@ yargs.command({
     handler(argv){
         if(argv.style=="")
             yonlendir.guitar();
-        else 
+        else //
             if(yonlendir.IsInData(argv.style))
                 yonlendir.guitar(argv.style)
+        //
     }
 })
 yargs.command({
@@ -140,12 +146,6 @@ yargs.command({
         else 
             if(yonlendir.IsInData(argv.style))
                 yonlendir.trumpet(argv.style)
-    }
-})
-yargs.command({
-    command:'deneme',
-    handler(){
-        yonlendir.another();
     }
 })
 yargs.command({

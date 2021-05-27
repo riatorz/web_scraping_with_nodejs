@@ -1,4 +1,3 @@
-const open = require('open')
 const fs = require('fs')
 const {Builder, By, Key, until} = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
@@ -19,21 +18,45 @@ var IsInData = (data)=>{
         }
     }
 }
-async function piano() {
+async function piano(argv) {
     try {
-        var param = argv1;
+        var param = "piano/"+argv;
 		var driver = new webdriver.Builder().forBrowser('chrome').build();
         // Navigate to Url
-        await driver.get('https://www.8notes.com/'+param+"/classical/sheet_music/");
-		let element = await driver.findElement(By.css('.table-responsive'));
-		let body = await driver.findElement(By.tagName('tbody'));
-		let local_pieces = await body.findElements(By.tagName("tr"));
-		for (let e of local_pieces) {
-			let link = await e.getAttribute("onclick");
-			let link_split = link.split("'")[1];
-			let text = await e.getText();
-            console.log(text + ": " + link_split);
+        fs.writeFileSync("links.txt","");
+        await driver.get('https://www.8notes.com/'+param);
+        let element = await driver.findElement(By.css('.table-responsive'));
+        let pag = await element.findElements(By.tagName("li"));
+        let lastone = await pag[pag.length-2].getText();
+        console.log(lastone);
+        let searchArray = [];
+        searchArray.length = lastone;
+        fs.appendFile("links.txt","\n"+param.toUpperCase()+"\n",function(err){
+            if(err) console.log(err);
+        });
+        for(let i=1;i<searchArray.length+1;i++){
+            await driver.get('https://www.8notes.com/'+param+"/?page="+i);
+            console.log("Sayfa ::"+i);
+            let body = await driver.findElement(By.tagName('tbody'));
+            let local_pieces = await body.findElements(By.tagName("tr"));
+            fs.appendFile("links.txt","Sayfa: "+i+"\n",function(err){
+                if(err) console.log(err);
+            });
+            for (let e of local_pieces) {
+                let link = await e.getAttribute("onclick");
+                let link_split = link.split("'")[1];
+                let text = await e.getText();
+                console.log(text + ": " + link_split);
+                fs.appendFile("links.txt",text+":"+link_split+"\n",function(err){
+                    if(err) console.log(err);
+                });
+            }
+            setTimeout(()=>{},1000);
         }
+        //Kopyala yapıştırrrr diğerleri için
+        //Dosyayı oluştur ve dosyaya yaz
+        //param hepsi için değişecek
+        //param değerleri kontrolü
 
     } catch (error){
 		console.log(error);
@@ -269,6 +292,59 @@ async function all(){
         driver.quit();
     }
 } 
+async function cc(){
+    try{
+        let arr = datas().enstruman;
+        var driver = new webdriver.Builder().forBrowser('chrome').build();
+        fs.writeFileSync("links.txt","");
+        Artist = [];
+        Titles = [];
+        Difficulties = [];
+        AllLinks = [];
+        MIDILinks = [];
+        for(let i of arr)
+        {
+            let param = i;
+            await driver.get('https://www.8notes.com/'+i+'/classical/sheet_music/');
+            //let element = await driver.findElement(By.css('.table-responsive'));
+            let body = await driver.findElement(By.tagName('tbody'));
+            let local_pieces = await body.findElements(By.tagName("tr"));
+            for(let e of local_pieces){
+                let link = await e.getAttribute("onclick");
+                let artistName = await e.findElement(By.css('.artname')).getText();
+                let pTitle = await e.findElement(By.css('.fsmtitle')).getText();
+                let pDif = await (await (await e.findElement(By.className('level_type'))).findElement(By.className('difflevel'))).getAttribute('title');
+                let link_split = link.split("'")[1];
+                let text = await e.getText();
+                console.log(artistName+'  '+pTitle+'    '+pDif+'    '+link_split);
+                Artist.push(artistName); Titles.push(pTitle); Difficulties.push(pDif); AllLinks.push(link_split);
+            }
+            for(let x of AllLinks){
+                await driver.get('https://www.8notes.com'+x)
+                let midi1 = await driver.findElement(By.id('midi_container'));
+                let midi2 = await midi1.findElements(By.tagName('a'));
+                let midi3 = await midi2[1].getAttribute('href')
+                MIDILinks.push(midi3);
+            }
+            fs.writeFileSync('all.json',Data); //Temizlik
+            for(let i=0;i<Artist.length;i++){
+                let Features = {
+                    Artist:Artist[i],
+                    Titles:Titles[i],
+                    Difficulties:Difficulties[i],
+                    AllLinks:AllLinks[i],
+                    MIDILinks:MIDILinks[i]
+                }
+                let Data = JSON.stringify(Features);
+                fs.appendFile('all.json',Data);
+            }
+        }
+    }catch(error){
+        console.log(error);
+    }finally{
+        driver.quit();
+    }
+}
 module.exports = {
     piano:piano,
     guitar:guitar,
@@ -280,5 +356,6 @@ module.exports = {
     trumpet:trumpet,
     IsInData:IsInData,
     sos:sos,
-    all:all
+    all:all,
+    cc:cc
 }
