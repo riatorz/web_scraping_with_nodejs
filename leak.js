@@ -3,20 +3,9 @@ const {Builder, By, Key, until} = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const chromedriver = require('chromedriver');
-const mysql = require('mysql');
 const { argv } = require('process');
 const { connect } = require('http2');
 
-const connection = mysql.createConnection({
-    host:'localhost',
-    user:'root',
-    password:'',
-    database:'nodejs_project'
-})
-connection.connect((error)=>{
-    if(!!error) console.log('Error');
-    else console.log('Connected')
-})
 chrome.setDefaultService(new chrome.ServiceBuilder(chromedriver.path).build());
 var IsInData = (data)=>{
     //-----------------------------
@@ -315,6 +304,9 @@ async function cc(){
         Difficulties = [];
         AllLinks = [];
         MIDILinks = [];
+        photoLinks1 = [];
+        photoLinks2 = [];
+        sheetDesc = [];
         for(let i of arr)
         {
             let param = i;
@@ -337,7 +329,17 @@ async function cc(){
                 let midi1 = await driver.findElement(By.id('midi_container'));
                 let midi2 = await midi1.findElements(By.tagName('a'));
                 let midi3 = await midi2[1].getAttribute('href')
+                let img_link = await driver.findElement(By.id('score'));
+                let img_linkx = await driver.findElement(By.id('score2'));
+                let img_link2 = await img_link.getAttribute('src');
+                let img_link2x = await img_linkx.getAttribute('src');
+                let desc1 = await driver.findElement(By.id('infobox'))
+                let desc2 = await desc1.findElement(By.className('comp_table'))
+                let desc3 = await desc2.getText();
                 MIDILinks.push(midi3);
+                photoLinks1.push(img_link2);
+                photoLinks2.push(img_link2x);
+                sheetDesc.push(desc3);
             }
             fs.writeFileSync('all.json','',(err)=>{
                 if(err) console.log(err);
@@ -348,18 +350,15 @@ async function cc(){
                     Titles:Titles[i],
                     Difficulties:Difficulties[i],
                     AllLinks:AllLinks[i],
-                    MIDILinks:MIDILinks[i]
+                    MIDILinks:MIDILinks[i],
+                    photoLinks1:photoLinks1[i],
+                    photoLinks2:photoLinks2[i],
+                    sheetDesc:sheetDesc[i]
                 }
                 let Data = JSON.stringify(Features);
                 fs.appendFileSync('all.json',Data,function(err){
                     if(err) console.log(err);
                 });
-                let sql = 'INSERT INTO enstruman SET ?';
-                connection.query(sql,Features,(err,result)=>{
-                    if(err) throw err;
-                    console.log(result);
-                })
-                
             }
         }
     }catch(error){
