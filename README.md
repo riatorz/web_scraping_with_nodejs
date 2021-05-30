@@ -16,4 +16,4 @@ Bu proje Node.js dersi kapsamında, www.8notes.com sitesinde enstrümana, stile 
         npm i mongodb
         
 # Site Üzerinde Tarama Yapma ve Veri Çekme
-''' node newapp.js cc'''   komutunu kullanmalısınız.
+* ' node newapp.js cc'   komutunu kullanmalısınız.
