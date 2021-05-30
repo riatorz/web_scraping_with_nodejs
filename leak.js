@@ -1,10 +1,10 @@
 const fs = require('fs');
-const mongo = require('mongodb');
+const fs2 = require('fs/promises');
 const {Builder, By, Key, until} = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const chromedriver = require('chromedriver');
-const { argv } = require('process');
+const { argv, features } = require('process');
 const { connect } = require('http2');
 
 chrome.setDefaultService(new chrome.ServiceBuilder(chromedriver.path).build());
@@ -338,7 +338,8 @@ async function cc(){
                 photoLinks2.push(img_link2x);
                 sheetDesc.push(desc3);
             }
-            fs.writeFileSync('all.json','',(err)=>{
+            let x = {pieces:[]};
+            fs.writeFileSync('hepsi.json', JSON.stringify(x, null,'\t'),(err)=>{
                 if(err) console.log(err);
             }); //Temizlik
             for(let i=0;i<Artist.length;i++){
@@ -352,12 +353,21 @@ async function cc(){
                     photoLinks2:photoLinks2[i],
                     sheetDesc:sheetDesc[i]
                 }
-                let Data = JSON.stringify(Features);
-                fs.appendFileSync('all.json',Data,function(err){
+                var JsonData = {}
+                await fs2.readFile('hepsi.json', { encoding:'utf8',flag: 'r' }) 
+                .then(async data => { 
+                    JsonData = JSON.parse(data);
+                }).catch(function(err){
+                    console.log(err);
+                })
+                JsonData.pieces.push(Features);
+                let Data = JSON.stringify(JsonData, null, '\t');
+                fs.writeFileSync('hepsi.json',Data,function(err){
                     if(err) console.log(err);
                 });
             }
-            const MongoClient = require('mongodb').MongoClient;
+        }
+        const MongoClient = require('mongodb').MongoClient;
             const URL = 'mongodb+srv://user:159357357@nodejsmongodb.rsdgr.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
 
             MongoClient.connect(URL, (err, client) => {
@@ -365,31 +375,21 @@ async function cc(){
                 const db = client.db('NodejsMongoDB');
                 console.log('MongoDB veritabanı bağlantısı başarıyla gerçekleştirildi.');
                 db.createCollection('pieces', (err, result) =>{
-                    if (err) throw err;
-                    console.log('Koleksiyon oluşturuldu.');
+                    if (err) 
+                    console.log(err);
                 });
-                let data = fs.readFileSync('all.json');
+                let data = fs.readFileSync('hepsi.json');
                 let jData = JSON.parse(data);
-                db.collection('pieces').insertOne(jData, (err, result) =>{
+                db.collection('pieces').insertMany(jData.pieces, (err, result) =>{
                     if (err) throw err;
                     console.log('Bir başarılı...');
                     client.close();
                 });
             });
-            MongoClient.connect(URL, (err, client) => {
-                if (err) throw err;
-                const db = client.db('NodejsMongoDB');
-                db.collection('pieces').find({}).toArray((err, result) =>{
-                    if (err) throw err;
-                    console.log(result[0]);
-                });
-            });
-        }
     }catch(error){
         console.log(error);
     }finally{
         driver.quit();
-        client.close();
     }
 }
 
