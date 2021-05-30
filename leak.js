@@ -1,4 +1,5 @@
-const fs = require('fs')
+const fs = require('fs');
+const mongo = require('mongodb');
 const {Builder, By, Key, until} = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
@@ -55,10 +56,6 @@ async function piano(argv) {
             }
             setTimeout(()=>{},1000);
         }
-        //Kopyala yapıştırrrr diğerleri için
-        //Dosyayı oluştur ve dosyaya yaz
-        //param hepsi için değişecek
-        //param değerleri kontrolü
 
     } catch (error){
 		console.log(error);
@@ -360,13 +357,42 @@ async function cc(){
                     if(err) console.log(err);
                 });
             }
+            const MongoClient = require('mongodb').MongoClient;
+            const URL = 'mongodb+srv://user:159357357@nodejsmongodb.rsdgr.mongodb.net/myFirstDatabase?retryWrites=true&w=majority';
+
+            MongoClient.connect(URL, (err, client) => {
+                if (err) throw err;
+                const db = client.db('NodejsMongoDB');
+                console.log('MongoDB veritabanı bağlantısı başarıyla gerçekleştirildi.');
+                db.createCollection('pieces', (err, result) =>{
+                    if (err) throw err;
+                    console.log('Koleksiyon oluşturuldu.');
+                });
+                let data = fs.readFileSync('all.json');
+                let jData = JSON.parse(data);
+                db.collection('pieces').insertOne(jData, (err, result) =>{
+                    if (err) throw err;
+                    console.log('Bir başarılı...');
+                    client.close();
+                });
+            });
+            MongoClient.connect(URL, (err, client) => {
+                if (err) throw err;
+                const db = client.db('NodejsMongoDB');
+                db.collection('pieces').find({}).toArray((err, result) =>{
+                    if (err) throw err;
+                    console.log(result[0]);
+                });
+            });
         }
     }catch(error){
         console.log(error);
     }finally{
         driver.quit();
+        client.close();
     }
 }
+
 module.exports = {
     piano:piano,
     guitar:guitar,
