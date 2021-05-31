@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^4.1.1",
     "chromedriver": "^90.0.1",
+    "mongodb": "^3.6.9",
     "mysql": "^2.18.1",
     "selenium-webdriver": "^4.0.0-beta.2",
     "yargs": "^16.2.0"
